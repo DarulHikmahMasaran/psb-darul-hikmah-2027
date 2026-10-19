@@ -1,0 +1,8 @@
+{
+  "name": "PSB PPTQM Darul Hikmah 2027/2028 (Free Static Edition)",
+  "description": "Sistem Penerimaan Santri Baru (PSB) Pondok Pesantren Tahfidzul Qur'an Modern (PPTQM) Darul Hikmah Tahun Pelajaran 2027/2028 untuk jenjang SMP. Versi 100% Gratis Tanpa Billing / Kartu Debit.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
