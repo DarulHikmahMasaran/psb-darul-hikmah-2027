@@ -170,7 +170,7 @@ const defaultSettings: SystemSetting[] = [
   { id: '15', key: 'bank_account_number', value: '7123456789', description: 'Nomor Rekening Resmi PSB', updated_at: new Date().toISOString() },
   { id: '16', key: 'bank_account_holder', value: 'Yayasan PPTQM Darul Hikmah', description: 'Atas Nama Rekening Resmi PSB', updated_at: new Date().toISOString() },
   { id: '17', key: 'reregistration_fee', value: '4500000', description: 'Biaya Daftar Ulang Santri Lulus (Rp)', updated_at: new Date().toISOString() },
-  { id: '18', key: 'public_demo_controls', value: 'true', description: 'Tampilkan tombol Uji Role / Simulasi ke publik (true = Mode Evaluasi, false = Mode Produksi Resmi)', updated_at: new Date().toISOString() }
+  { id: '18', key: 'public_demo_controls', value: 'false', description: 'Tampilkan tombol Uji Role / Simulasi ke publik (true = Mode Evaluasi, false = Mode Produksi Resmi)', updated_at: new Date().toISOString() }
 ];
 
 export const defaultDocumentTypes: DocumentType[] = [
