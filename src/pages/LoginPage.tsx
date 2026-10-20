@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { settingsService } from '../services/settingsService';
 import { useAuth } from '../hooks/useAuth';
 import { getStorageData } from '../lib/storage';
 import { Input } from '../components/Input';
@@ -17,8 +18,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const storageSettings = getStorageData().settings || [];
-  const isDemoModeAllowed = (storageSettings.find(s => s.key === 'public_demo_controls')?.value ?? 'true') !== 'false';
+  const [isDemoModeAllowed, setIsDemoModeAllowed] = useState<boolean>(() => {
+    const storageSettings = getStorageData().settings || [];
+    return (storageSettings.find(s => s.key === 'public_demo_controls')?.value ?? 'false') === 'true';
+  });
+
+  useEffect(() => {
+    const syncDemoFlag = () => {
+      const st = getStorageData().settings || [];
+      setIsDemoModeAllowed((st.find(s => s.key === 'public_demo_controls')?.value ?? 'false') === 'true');
+    };
+    settingsService.getSettings().then(cfg => {
+      if (cfg.public_demo_controls !== undefined) {
+        setIsDemoModeAllowed(cfg.public_demo_controls === 'true');
+      }
+    }).catch(() => {});
+    window.addEventListener('psb-settings-updated', syncDemoFlag);
+    return () => window.removeEventListener('psb-settings-updated', syncDemoFlag);
+  }, []);
 
   const handleDemoSuperAdminLogin = () => {
     setError(null);

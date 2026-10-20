@@ -1,3 +1,4 @@
+import { settingsService } from '../services/settingsService';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Badge } from './Badge';
@@ -47,8 +48,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, onNavigate, onOpen
   const [brandName, setBrandName] = useState('PPTQM DARUL HIKMAH');
   const [academicYear, setAcademicYear] = useState('2027/2028');
   const isConnected = isSupabaseConfigured();
-  const storageSettings = getStorageData().settings || [];
-  const isPublicDemoEnabled = (storageSettings.find(s => s.key === 'public_demo_controls')?.value ?? 'true') !== 'false';
+  const [isPublicDemoEnabled, setIsPublicDemoEnabled] = useState<boolean>(() => {
+    const storageSettings = getStorageData().settings || [];
+    return (storageSettings.find(s => s.key === 'public_demo_controls')?.value ?? 'false') === 'true';
+  });
+
+  useEffect(() => {
+    const syncDemoFlag = () => {
+      const st = getStorageData().settings || [];
+      setIsPublicDemoEnabled((st.find(s => s.key === 'public_demo_controls')?.value ?? 'false') === 'true');
+    };
+    settingsService.getSettings().then(cfg => {
+      if (cfg.public_demo_controls !== undefined) {
+        setIsPublicDemoEnabled(cfg.public_demo_controls === 'true');
+      }
+    }).catch(() => {});
+    window.addEventListener('psb-settings-updated', syncDemoFlag);
+    return () => window.removeEventListener('psb-settings-updated', syncDemoFlag);
+  }, [currentRoute]);
   const canSeeAdminTools = isPublicDemoEnabled || role === 'SUPER_ADMIN' || role === 'PANITIA';
 
   useEffect(() => {

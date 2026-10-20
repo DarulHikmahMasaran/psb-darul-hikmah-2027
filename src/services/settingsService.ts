@@ -5,14 +5,26 @@ import { auditService } from './auditService';
 
 export const settingsService = {
   async getSettings(): Promise<Record<string, string>> {
-    if (!isDemoSessionActive() && isSupabaseConfigured() && supabase) {
+    if (isSupabaseConfigured() && supabase) {
       try {
         const { data, error } = await supabase.from('system_settings').select('*');
         if (!error && data && data.length > 0) {
           const map: Record<string, string> = {};
+          const localData = getStorageData();
           data.forEach((s: SystemSetting) => {
             map[s.key] = s.value;
+            const ex = localData.settings.find((item) => item.key === s.key);
+            if (ex) {
+              ex.value = s.value;
+              ex.updated_at = s.updated_at || new Date().toISOString();
+            } else {
+              localData.settings.push(s);
+            }
           });
+          saveStorageData(localData);
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new Event("psb-settings-updated"));
+          }
           return map;
         }
       } catch (err) {
@@ -29,7 +41,7 @@ export const settingsService = {
   },
 
   async getAllSettingsList(): Promise<SystemSetting[]> {
-    if (!isDemoSessionActive() && isSupabaseConfigured() && supabase) {
+    if (isSupabaseConfigured() && supabase) {
       try {
         const { data, error } = await supabase.from('system_settings').select('*');
         if (!error && data) return data as SystemSetting[];
@@ -68,8 +80,11 @@ export const settingsService = {
       });
     }
     saveStorageData(data);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("psb-settings-updated"));
+    }
 
-    if (!isDemoSessionActive() && isSupabaseConfigured() && supabase) {
+    if (isSupabaseConfigured() && supabase) {
       try {
         await supabase
           .from('system_settings')

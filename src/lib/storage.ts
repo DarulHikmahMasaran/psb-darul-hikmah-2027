@@ -150,7 +150,8 @@ interface StorageData {
   seqCounter: number;
 }
 
-const STORAGE_KEY = 'psb_pptqm_darul_hikmah_db_v1';
+const STORAGE_KEY = 'psb_pptqm_darul_hikmah_db_v2_clean';
+const LEGACY_DEMO_STORAGE_KEY = 'psb_pptqm_darul_hikmah_db_v1';
 
 const defaultSettings: SystemSetting[] = [
   { id: '1', key: 'psb_year', value: '2027/2028', description: 'Tahun Pelajaran Penerimaan Santri Baru', updated_at: new Date().toISOString() },
@@ -461,7 +462,7 @@ export const defaultNotifications: CandidateNotification[] = [
   }
 ];
 
-const initialData: StorageData = {
+const demoSampleInitialData: StorageData = {
   profiles: [
     {
       id: 'prof-super-admin',
@@ -806,15 +807,119 @@ const initialData: StorageData = {
   seqCounter: 1,
 };
 
+
+const initialData: StorageData = {
+  profiles: [
+    {
+      id: 'prof-super-admin',
+      user_id: 'usr-super-admin',
+      full_name: 'Ustadz H. Ahmad Fauzan, Lc., M.Pd',
+      email: 'admin@darulhikmah.sch.id',
+      phone: '081234567890',
+      role: 'SUPER_ADMIN',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'prof-panitia-1',
+      user_id: 'usr-panitia-1',
+      full_name: 'Ustadz Ridwan Robbani, S.Pd',
+      email: 'panitia@darulhikmah.sch.id',
+      phone: '081298765432',
+      role: 'PANITIA',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'prof-penguji-quran-1',
+      user_id: 'usr-penguji-quran-1',
+      full_name: 'Ustadz KH. Muhaimin Al-Hafidz',
+      email: 'penguji.quran@darulhikmah.sch.id',
+      phone: '081255667788',
+      role: 'PENGUJI_QURAN',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'prof-pimpinan-1',
+      user_id: 'usr-pimpinan-1',
+      full_name: 'KH. Abdullah Syukri, M.Pd (Pimpinan)',
+      email: 'pimpinan@darulhikmah.sch.id',
+      phone: '081299887766',
+      role: 'PIMPINAN',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  ],
+  candidates: [],
+  statusHistory: [],
+  settings: defaultSettings,
+  auditLogs: [],
+  documentTypes: defaultDocumentTypes,
+  candidateDocuments: [],
+  testTypes: defaultTestTypes,
+  testSchedules: defaultTestSchedules,
+  testScheduleParticipants: [],
+  verificationTokens: [],
+  notifications: [],
+  subjects: [...defaultSubjects, psychotestSubject],
+  questionCategories: [...defaultCategories, ...psychotestCategories],
+  questions: [...defaultQuestions, ...psychotestQuestions],
+  questionOptions: [
+    ...defaultQuestions.flatMap(q => q.options || []),
+    ...psychotestQuestions.flatMap(q => q.options || [])
+  ],
+  exams: [...defaultExams, defaultPsychotestExam],
+  examConfigs: [...defaultExamConfigs, ...defaultPsychotestExamConfigs],
+  examAttempts: [],
+  examAttemptQuestions: [],
+  examAnswers: [],
+  examEvents: [],
+  landingSettings: defaultLandingSettings,
+  landingStats: defaultLandingStats,
+  landingRequirements: defaultLandingRequirements,
+  landingSteps: defaultLandingSteps,
+  landingSchedules: defaultLandingSchedules,
+  landingFaqs: defaultLandingFaqs,
+  landingContacts: defaultLandingContacts,
+  landingAnnouncements: defaultLandingAnnouncements,
+  landingVersions: defaultLandingVersions,
+  qrScanLogs: [],
+  quranRubrics: defaultQuranRubrics,
+  quranAssignments: [],
+  quranAssessments: [],
+  quranRubricSnapshots: [],
+  quranAssessmentScores: [],
+  psychotestScoringConfigs: defaultPsychotestScoringConfigs,
+  selectionScoringVersions: defaultSelectionScoringVersions,
+  selectionScoringComponents: defaultSelectionScoringComponents,
+  selectionPassingRuleVersions: defaultSelectionPassingRuleVersions,
+  selectionTieBreakers: defaultSelectionTieBreakers,
+  selectionRuns: [],
+  selectionRunComponentSnapshots: [],
+  selectionResults: [],
+  selectionResultComponents: [],
+  credentials: {
+    'admin@darulhikmah.sch.id': 'Password123!',
+    'panitia@darulhikmah.sch.id': 'Password123!',
+    'penguji.quran@darulhikmah.sch.id': 'Password123!',
+    'pimpinan@darulhikmah.sch.id': 'Password123!',
+  },
+  seqCounter: 0,
+};
+
 let __memoryFallbackStorage: StorageData | null = null;
 
 export const getStorageData = (): StorageData => {
   if (typeof window === 'undefined') return initialData;
-  // Hentikan fallback localStorage untuk business data jika Supabase aktif sebagai production backend
-  if (isSupabaseConfigured()) {
-    return initialData;
-  }
   try {
+    // Hapus storage v1 lama yang berisi data demo otomatis
+    try { localStorage.removeItem(LEGACY_DEMO_STORAGE_KEY); } catch {}
+
     let raw: string | null = null;
     try { raw = localStorage.getItem(STORAGE_KEY); } catch { raw = null; }
     if (!raw) {
@@ -844,16 +949,8 @@ export const getStorageData = (): StorageData => {
         }
       }
     }
-    if (parsed.credentials && !parsed.credentials['pimpinan@darulhikmah.sch.id']) {
-      parsed.credentials['pimpinan@darulhikmah.sch.id'] = 'Password123!';
-      mutated = true;
-    }
-    if (parsed.candidateDocuments && !parsed.candidateDocuments.some((d: any) => d.id === 'doc-sample-bayar')) {
-      parsed.candidateDocuments.push(initialData.candidateDocuments[initialData.candidateDocuments.length - 1]);
-      mutated = true;
-    }
     if (!parsed.candidateDocuments) {
-      parsed.candidateDocuments = initialData.candidateDocuments;
+      parsed.candidateDocuments = [];
       mutated = true;
     }
     if (!parsed.testTypes || parsed.testTypes.length === 0) {
@@ -865,36 +962,39 @@ export const getStorageData = (): StorageData => {
       mutated = true;
     }
     if (!parsed.testScheduleParticipants) {
-      parsed.testScheduleParticipants = defaultTestScheduleParticipants;
+      parsed.testScheduleParticipants = [];
       mutated = true;
     }
-    if (!parsed.verificationTokens || parsed.verificationTokens.length === 0) {
-      parsed.verificationTokens = defaultVerificationTokens;
+    if (!parsed.verificationTokens) {
+      parsed.verificationTokens = [];
       mutated = true;
     }
     if (!parsed.notifications) {
-      parsed.notifications = defaultNotifications;
+      parsed.notifications = [];
       mutated = true;
     }
     if (!parsed.subjects || parsed.subjects.length === 0) {
-      parsed.subjects = defaultSubjects;
+      parsed.subjects = [...defaultSubjects, psychotestSubject];
       mutated = true;
     }
     if (!parsed.questionCategories || parsed.questionCategories.length === 0) {
-      parsed.questionCategories = defaultCategories;
+      parsed.questionCategories = [...defaultCategories, ...psychotestCategories];
       mutated = true;
     }
     if (!parsed.questions || parsed.questions.length === 0) {
-      parsed.questions = defaultQuestions;
-      parsed.questionOptions = defaultQuestions.flatMap(q => q.options || []);
+      parsed.questions = [...defaultQuestions, ...psychotestQuestions];
+      parsed.questionOptions = [
+        ...defaultQuestions.flatMap((q: any) => q.options || []),
+        ...psychotestQuestions.flatMap((q: any) => q.options || [])
+      ];
       mutated = true;
     }
     if (!parsed.exams || parsed.exams.length === 0) {
-      parsed.exams = defaultExams;
+      parsed.exams = [...defaultExams, defaultPsychotestExam];
       mutated = true;
     }
     if (!parsed.examConfigs || parsed.examConfigs.length === 0) {
-      parsed.examConfigs = defaultExamConfigs;
+      parsed.examConfigs = [...defaultExamConfigs, ...defaultPsychotestExamConfigs];
       mutated = true;
     }
     if (!parsed.examAttempts) {
@@ -913,39 +1013,9 @@ export const getStorageData = (): StorageData => {
       parsed.examEvents = [];
       mutated = true;
     }
-    // CMS auto-seeding & schema migration
     if (!parsed.landingSettings) {
       parsed.landingSettings = defaultLandingSettings;
       mutated = true;
-    } else {
-      if (!parsed.landingSettings.cta_title) {
-        parsed.landingSettings.cta_title = defaultLandingSettings.cta_title;
-        mutated = true;
-      }
-      if (!parsed.landingSettings.cta_description) {
-        parsed.landingSettings.cta_description = defaultLandingSettings.cta_description;
-        mutated = true;
-      }
-      if (!parsed.landingSettings.cta_primary_button_text) {
-        parsed.landingSettings.cta_primary_button_text = defaultLandingSettings.cta_primary_button_text || 'Daftar Sekarang';
-        mutated = true;
-      }
-      if (!parsed.landingSettings.cta_primary_button_link) {
-        parsed.landingSettings.cta_primary_button_link = defaultLandingSettings.cta_primary_button_link || '/register';
-        mutated = true;
-      }
-      if (parsed.landingSettings.cta_primary_button_active === undefined) {
-        parsed.landingSettings.cta_primary_button_active = true;
-        mutated = true;
-      }
-      if (!parsed.landingSettings.cta_secondary_button_text) {
-        parsed.landingSettings.cta_secondary_button_text = defaultLandingSettings.cta_secondary_button_text || 'Hubungi Panitia';
-        mutated = true;
-      }
-      if (parsed.landingSettings.cta_secondary_button_active === undefined) {
-        parsed.landingSettings.cta_secondary_button_active = true;
-        mutated = true;
-      }
     }
     if (!parsed.landingStats || parsed.landingStats.length === 0) {
       parsed.landingStats = defaultLandingStats;
@@ -983,17 +1053,16 @@ export const getStorageData = (): StorageData => {
       parsed.qrScanLogs = [];
       mutated = true;
     }
-    // Quran Assessment auto-seeding
     if (!parsed.quranRubrics || parsed.quranRubrics.length === 0) {
       parsed.quranRubrics = defaultQuranRubrics;
       mutated = true;
     }
-    if (!parsed.quranAssignments || parsed.quranAssignments.length === 0) {
-      parsed.quranAssignments = defaultQuranExaminerAssignments;
+    if (!parsed.quranAssignments) {
+      parsed.quranAssignments = [];
       mutated = true;
     }
     if (!parsed.quranAssessments) {
-      parsed.quranAssessments = defaultQuranAssessments;
+      parsed.quranAssessments = [];
       mutated = true;
     }
     if (!parsed.quranRubricSnapshots) {
@@ -1001,78 +1070,13 @@ export const getStorageData = (): StorageData => {
       mutated = true;
     }
     if (!parsed.quranAssessmentScores) {
-      parsed.quranAssessmentScores = defaultQuranAssessments.flatMap((a: any) => a.scores || []);
-      mutated = true;
-    }
-    if (parsed.profiles && !parsed.profiles.some((p: any) => p.user_id === 'usr-penguji-quran-1')) {
-      parsed.profiles.push({
-        id: 'prof-penguji-quran-1',
-        user_id: 'usr-penguji-quran-1',
-        full_name: 'Ustadz KH. Muhaimin Al-Hafidz',
-        email: 'penguji.quran@darulhikmah.sch.id',
-        phone: '081255667788',
-        role: 'PENGUJI_QURAN',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-      mutated = true;
-    }
-    if (parsed.profiles && !parsed.profiles.some((p: any) => p.user_id === 'usr-pimpinan-1')) {
-      parsed.profiles.push({
-        id: 'prof-pimpinan-1',
-        user_id: 'usr-pimpinan-1',
-        full_name: 'KH. Abdullah Syukri, M.Pd (Pimpinan)',
-        email: 'pimpinan@darulhikmah.sch.id',
-        phone: '081299887766',
-        role: 'PIMPINAN',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-      mutated = true;
-    }
-    // Psychotest Module auto-seeding
-    if (parsed.subjects && !parsed.subjects.some((s: any) => s.id === 'sub-psikotes')) {
-      parsed.subjects.push(psychotestSubject);
-      mutated = true;
-    }
-    if (parsed.questionCategories && !parsed.questionCategories.some((c: any) => c.id === 'cat-psi-logika')) {
-      parsed.questionCategories.push(...psychotestCategories);
-      mutated = true;
-    }
-    if (parsed.questions && !parsed.questions.some((q: any) => q.id === 'q-psi-logika-1')) {
-      parsed.questions.push(...psychotestQuestions);
-      parsed.questionOptions.push(...psychotestQuestions.flatMap((q: any) => q.options || []));
-      mutated = true;
-    }
-    if (parsed.exams && !parsed.exams.some((e: any) => e.id === 'exam-cbt-psikotes-1')) {
-      parsed.exams.push(defaultPsychotestExam);
-      mutated = true;
-    }
-    if (parsed.examConfigs && !parsed.examConfigs.some((c: any) => c.id === 'cfg-psi-1')) {
-      parsed.examConfigs.push(...defaultPsychotestExamConfigs);
+      parsed.quranAssessmentScores = [];
       mutated = true;
     }
     if (!parsed.psychotestScoringConfigs || parsed.psychotestScoringConfigs.length === 0) {
       parsed.psychotestScoringConfigs = defaultPsychotestScoringConfigs;
       mutated = true;
     }
-    if (parsed.testScheduleParticipants && !parsed.testScheduleParticipants.some((p: any) => p.id === 'tsp-sample-3')) {
-      parsed.testScheduleParticipants.push({
-        id: 'tsp-sample-3',
-        schedule_id: 'sch-psikotes-1',
-        candidate_id: 'cand-sample-1',
-        seat_number: 'P-01',
-        attendance_status: 'BELUM_HADIR',
-        assigned_by: 'usr-panitia-1',
-        assigned_at: new Date(Date.now() - 86400000).toISOString(),
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
-      });
-      mutated = true;
-    }
-    // Final Selection Module auto-seeding
     if (!parsed.selectionScoringVersions || parsed.selectionScoringVersions.length === 0) {
       parsed.selectionScoringVersions = defaultSelectionScoringVersions;
       mutated = true;
@@ -1118,9 +1122,6 @@ export const getStorageData = (): StorageData => {
 export const saveStorageData = (data: StorageData): void => {
   __memoryFallbackStorage = data;
   if (typeof window === 'undefined') return;
-  if (isSupabaseConfigured()) {
-    return;
-  }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
@@ -1149,10 +1150,52 @@ export const importStorageDataJson = (jsonString: string): { success: boolean; m
   }
 };
 
+/**
+ * Mereset semua data pendaftar / santri demo menjadi 0 (Kosong & Siap Produksi Resmi),
+ * sambil tetap mempertahankan pengaturan sistem, konten CMS Landing Page, dan master soal/rubrik.
+ */
 export const resetStorageToDefault = (): void => {
-  __memoryFallbackStorage = JSON.parse(JSON.stringify(initialData));
+  const current = getStorageData();
+  const clean: StorageData = JSON.parse(JSON.stringify(initialData));
+  // Pertahankan pengaturan sistem dan CMS Landing Page yang sudah diedit admin
+  clean.settings = current.settings || defaultSettings;
+  clean.landingSettings = current.landingSettings || defaultLandingSettings;
+  clean.landingStats = current.landingStats || defaultLandingStats;
+  clean.landingRequirements = current.landingRequirements || defaultLandingRequirements;
+  clean.landingSteps = current.landingSteps || defaultLandingSteps;
+  clean.landingSchedules = current.landingSchedules || defaultLandingSchedules;
+  clean.landingFaqs = current.landingFaqs || defaultLandingFaqs;
+  clean.landingContacts = current.landingContacts || defaultLandingContacts;
+  clean.landingAnnouncements = current.landingAnnouncements || defaultLandingAnnouncements;
+  clean.landingVersions = current.landingVersions || defaultLandingVersions;
+
+  __memoryFallbackStorage = clean;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(__memoryFallbackStorage));
+    localStorage.removeItem(LEGACY_DEMO_STORAGE_KEY);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+  } catch {}
+};
+
+/**
+ * Memuat 3 data santri contoh (Farhan, Zaki, Fatimah) jika panitia ingin melakukan simulasi pelatihan.
+ */
+export const loadDemoSampleData = (): void => {
+  const current = getStorageData();
+  const sample: StorageData = JSON.parse(JSON.stringify(demoSampleInitialData));
+  sample.settings = current.settings || defaultSettings;
+  sample.landingSettings = current.landingSettings || defaultLandingSettings;
+  sample.landingStats = current.landingStats || defaultLandingStats;
+  sample.landingRequirements = current.landingRequirements || defaultLandingRequirements;
+  sample.landingSteps = current.landingSteps || defaultLandingSteps;
+  sample.landingSchedules = current.landingSchedules || defaultLandingSchedules;
+  sample.landingFaqs = current.landingFaqs || defaultLandingFaqs;
+  sample.landingContacts = current.landingContacts || defaultLandingContacts;
+  sample.landingAnnouncements = current.landingAnnouncements || defaultLandingAnnouncements;
+  sample.landingVersions = current.landingVersions || defaultLandingVersions;
+
+  __memoryFallbackStorage = sample;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
   } catch {}
 };
 

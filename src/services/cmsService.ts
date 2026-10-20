@@ -44,16 +44,33 @@ class CmsService {
 
     if (isSupabaseConfigured() && supabase) {
       try {
-        const { data, error } = await supabase
-          .from('landing_page_versions')
-          .select('*')
-          .eq('status', 'PUBLISHED')
-          .order('version_number', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const [verRes, sysRes] = await Promise.all([
+          supabase
+            .from('landing_page_versions')
+            .select('*')
+            .eq('status', 'PUBLISHED')
+            .order('version_number', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from('system_settings')
+            .select('value, updated_at')
+            .eq('key', 'cms_published_snapshot')
+            .maybeSingle()
+        ]);
 
-        if (!error && data?.content_snapshot) {
-          cachedPublishedSnapshot = data.content_snapshot as LandingPageSnapshot;
+        let snap: LandingPageSnapshot | null = null;
+        if (! sysRes.error && sysRes.data?.value) {
+          try {
+            snap = JSON.parse(sysRes.data.value) as LandingPageSnapshot;
+          } catch {}
+        }
+        if (!snap && !verRes.error && verRes.data?.content_snapshot) {
+          snap = verRes.data.content_snapshot as LandingPageSnapshot;
+        }
+
+        if (snap) {
+          cachedPublishedSnapshot = snap;
           lastCacheTimestamp = now;
           return cachedPublishedSnapshot;
         }
@@ -99,6 +116,33 @@ class CmsService {
    */
   async getDraftContent(): Promise<LandingPageSnapshot> {
     const data = getStorageData();
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: sysRow } = await supabase
+          .from('system_settings')
+          .select('value, updated_at')
+          .in('key', ['cms_draft_snapshot', 'cms_published_snapshot'])
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (sysRow?.value) {
+          const remoteSnap = JSON.parse(sysRow.value) as LandingPageSnapshot;
+          const remoteTime = new Date(remoteSnap?.settings?.updated_at || sysRow.updated_at || 0).getTime();
+          const localTime = new Date(data.landingSettings?.updated_at || 0).getTime();
+          if (remoteTime >= localTime && remoteSnap?.settings) {
+            data.landingSettings = remoteSnap.settings;
+            data.landingStats = remoteSnap.stats || data.landingStats;
+            data.landingRequirements = remoteSnap.requirements || data.landingRequirements;
+            data.landingSteps = remoteSnap.steps || data.landingSteps;
+            data.landingSchedules = remoteSnap.schedules || data.landingSchedules;
+            data.landingFaqs = remoteSnap.faqs || data.landingFaqs;
+            data.landingContacts = remoteSnap.contacts || data.landingContacts;
+            data.landingAnnouncements = remoteSnap.announcements || data.landingAnnouncements;
+            saveStorageData(data);
+          }
+        }
+      } catch {}
+    }
     return {
       settings: { ...data.landingSettings },
       stats: [...data.landingStats].sort((a, b) => a.sort_order - b.sort_order),
@@ -151,6 +195,29 @@ class CmsService {
       data.landingAnnouncements = [...snapshot.announcements];
 
       saveStorageData(data);
+
+      if (isSupabaseConfigured() && supabase) {
+        try {
+          await supabase.from('system_settings').upsert(
+            {
+              key: 'cms_draft_snapshot',
+              value: JSON.stringify({
+                settings: data.landingSettings,
+                stats: data.landingStats,
+                requirements: data.landingRequirements,
+                steps: data.landingSteps,
+                schedules: data.landingSchedules,
+                faqs: data.landingFaqs,
+                contacts: data.landingContacts,
+                announcements: data.landingAnnouncements,
+              }),
+              description: 'Draft CMS Landing Page',
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'key' }
+          );
+        } catch {}
+      }
 
       await auditService.logAction({
         userId: user.id,
@@ -311,15 +378,28 @@ class CmsService {
     // Also persist to Supabase if configured
     if (isSupabaseConfigured() && supabase) {
       try {
+        await supabase.from('system_settings').upsert(
+          [
+            {
+              key: 'cms_published_snapshot',
+              value: JSON.stringify(currentDraft),
+              description: 'Published CMS Landing Page Snapshot',
+              updated_at: nowIso,
+            },
+            {
+              key: 'cms_draft_snapshot',
+              value: JSON.stringify(currentDraft),
+              description: 'Draft CMS Landing Page',
+              updated_at: nowIso,
+            }
+          ],
+          { onConflict: 'key' }
+        );
+
         await supabase.from('landing_page_versions').insert({
-          id: newVersion.id,
           version_number: newVersion.version_number,
           content_snapshot: newVersion.content_snapshot,
           status: 'PUBLISHED',
-          created_by: user.id,
-          created_by_name: newVersion.created_by_name,
-          published_by: user.id,
-          published_by_name: newVersion.published_by_name,
           published_at: nowIso,
           notes: newVersion.notes,
         });

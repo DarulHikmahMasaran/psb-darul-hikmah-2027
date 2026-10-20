@@ -1,3 +1,4 @@
+import { settingsService } from '../services/settingsService';
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
@@ -54,13 +55,18 @@ export const DatabaseGuideModal: React.FC<{ isOpen: boolean; onClose: () => void
     return (st?.value ?? 'true') !== 'false';
   });
 
-  const handleTogglePublicDemoMode = (enableDemo: boolean) => {
+  const handleTogglePublicDemoMode = async (enableDemo: boolean) => {
     const data = getStorageData();
     const existing = data.settings.find(s => s.key === 'public_demo_controls');
     if (existing) existing.value = enableDemo ? 'true' : 'false';
     else data.settings.push({ id: '18', key: 'public_demo_controls', value: enableDemo ? 'true' : 'false', updated_at: new Date().toISOString() });
     saveStorageData(data);
     setPublicDemoMode(enableDemo);
+    try {
+      await settingsService.updateSetting('public_demo_controls', enableDemo ? 'true' : 'false');
+    } catch (e) {
+      console.warn('Could not sync public_demo_controls to Supabase', e);
+    }
     setStatusMessage({
       type: 'success',
       text: enableDemo
