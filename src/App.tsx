@@ -170,7 +170,7 @@ function AppContent() {
       </div>
       <Footer />
       {toastMsg && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
+        <div className="fixed bottom-20 sm:bottom-5 right-4 left-4 sm:left-auto z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
           <div className="text-xs font-medium leading-relaxed flex-1 whitespace-pre-line">
             {toastMsg.message}
           </div>
@@ -214,7 +214,7 @@ function AppContent() {
       </div>
       <Footer />
       {toastMsg && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
+        <div className="fixed bottom-20 sm:bottom-5 right-4 left-4 sm:left-auto z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
           <div className="text-xs font-medium leading-relaxed flex-1 whitespace-pre-line">
             {toastMsg.message}
           </div>
@@ -532,7 +532,7 @@ function AppContent() {
         <aside
           role="status"
           aria-label="Demo Mode Banner"
-          className="bg-amber-500 text-amber-950 px-4 py-2.5 shadow-md border-b-2 border-amber-600 sticky top-0 z-50 transition-all"
+          className="bg-amber-500 text-amber-950 px-4 py-2 shadow-xs border-b border-amber-600 relative z-40 transition-all"
         >
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
@@ -576,7 +576,7 @@ function AppContent() {
       {!isCbtActiveRoute && <Footer />}
 
       {toastMsg && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
+        <div className="fixed bottom-20 sm:bottom-5 right-4 left-4 sm:left-auto z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500/40 flex items-start gap-3">
           <div className="text-xs font-medium leading-relaxed flex-1 whitespace-pre-line">
             {toastMsg.message}
           </div>

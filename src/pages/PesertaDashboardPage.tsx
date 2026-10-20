@@ -159,6 +159,93 @@ export const PesertaDashboardPage: React.FC<PesertaDashboardPageProps> = ({ onNa
         </div>
       </div>
 
+      {/* 1.5. Interactive 5-Step Admission Progress Tracker (Bento Stepper) */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs">
+        <div className="flex items-center justify-between gap-2 mb-3.5">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">
+              Peta Perjalanan Pendaftaran Ananda
+            </span>
+            <h2 className="text-xs sm:text-sm font-extrabold text-slate-900">
+              Tahapan Seleksi Santri Baru (Klik Tahap untuk Membuka)
+            </h2>
+          </div>
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+            Biodata {progress.percentage}%
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+          {[
+            {
+              step: "01",
+              title: "Isi Biodata",
+              sub: `${progress.percentage}% Lengkap`,
+              done: progress.percentage === 100,
+              route: "/peserta/biodata",
+            },
+            {
+              step: "02",
+              title: "Unggah Berkas",
+              sub: docSummary ? `${docSummary.uploadedRequiredTypes}/${docSummary.totalRequiredTypes} Berkas Wajib` : "Dokumen Wajib",
+              done: Boolean(docSummary?.isAllRequiredUploaded),
+              route: "/peserta/dokumen",
+            },
+            {
+              step: "03",
+              title: "Kirim & Verifikasi",
+              sub: candidate.status === "DRAFT" ? "Belum Dikirim" : "Sudah Dikirim",
+              done: candidate.status !== "DRAFT" && candidate.status !== "PERLU_PERBAIKAN",
+              route: "/peserta/review",
+            },
+            {
+              step: "04",
+              title: "Kartu & Jadwal",
+              sub: schedules.length > 0 ? `${schedules.length} Jadwal Aktif` : "Kartu QR Ujian",
+              done: candidate.status === "TERVERIFIKASI" || candidate.status === "DIIZINKAN_MENGIKUTI_SELEKSI" || candidate.status === "LULUS" || candidate.status === "DITERIMA_FINAL",
+              route: "/peserta/kartu",
+            },
+            {
+              step: "05",
+              title: "Ujian & Hasil",
+              sub: candidate.status === "LULUS" || candidate.status === "DITERIMA_FINAL" ? "Dinyatakan Lulus" : "CBT & Al-Qur’an",
+              done: candidate.status === "LULUS" || candidate.status === "DAFTAR_ULANG" || candidate.status === "DITERIMA_FINAL",
+              route: "/peserta/cbt",
+            },
+          ].map((item, idx) => (
+            <button
+              key={item.step}
+              type="button"
+              onClick={() => onNavigate(item.route)}
+              className={`text-left p-3 rounded-xl border transition flex flex-col justify-between gap-1.5 ${
+                item.done
+                  ? "bg-emerald-50/70 border-emerald-300 hover:bg-emerald-50"
+                  : "bg-slate-50/70 border-slate-200 hover:border-emerald-300 hover:bg-white"
+              } ${idx === 4 ? "col-span-2 sm:col-span-1" : ""}`}
+            >
+              <div className="flex items-center justify-between gap-1.5">
+                <span
+                  className={`inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-black ${
+                    item.done ? "bg-emerald-700 text-white" : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  TAHAP {item.step}
+                </span>
+                {item.done ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                )}
+              </div>
+              <div>
+                <div className="text-xs font-extrabold text-slate-900 leading-snug">{item.title}</div>
+                <div className="text-[11px] text-slate-500 mt-0.5 truncate">{item.sub}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 2. Status Alert Notification */}
       {/* Simulation Quick Status Bar (Only visible when public_demo_controls !== 'false') */}
       {sysSettings.public_demo_controls !== 'false' && (

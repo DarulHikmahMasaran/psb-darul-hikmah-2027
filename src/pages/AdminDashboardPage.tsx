@@ -156,38 +156,51 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Panel Verifikasi & Pendaftar PSB
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Pondok Pesantren Tahfidzul Qur'an Modern Darul Hikmah • Jenjang SMP TP 2027/2028
-          </p>
-        </div>
+      {/* Split-Bento Executive Admin Banner */}
+      <div className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 rounded-2xl p-5 sm:p-7 text-white shadow-md border border-emerald-800/60">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-[11px] font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+              <span>Portal Kendali Panitia &amp; Super Admin PSB</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+              Panel Verifikasi &amp; Manajemen Calon Santri
+            </h1>
+            <p className="text-xs text-emerald-100/85">
+              Pantau pendaftar masuk, verifikasi berkas dokumen, atur jadwal ujian, hingga kelola CMS Landing Page dalam satu tempat.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {onNavigate && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {onNavigate && (
+              <Button
+                size="sm"
+                variant="white"
+                leftIcon={<FileCheck2 className="w-3.5 h-3.5 text-emerald-900" />}
+                onClick={() => onNavigate('/admin/verifikasi-dokumen')}
+              >
+                Verifikasi Berkas
+              </Button>
+            )}
+            {onNavigate && isSuperAdmin && (
+              <Button
+                size="sm"
+                variant="outline-white"
+                onClick={() => onNavigate('/admin/landing-page')}
+              >
+                Edit CMS Landing Page
+              </Button>
+            )}
             <Button
               size="sm"
-              variant="primary"
-              className="bg-emerald-700 hover:bg-emerald-800"
-              leftIcon={<FileCheck2 className="w-3.5 h-3.5" />}
-              onClick={() => onNavigate('/admin/verifikasi-dokumen')}
+              variant="outline-white"
+              leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+              onClick={() => loadData()}
             >
-              Verifikasi Berkas Dokumen
+              Segarkan
             </Button>
-          )}
-
-          <Button
-            size="sm"
-            variant="outline"
-            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-            onClick={() => loadData()}
-          >
-            Segarkan Data
-          </Button>
+          </div>
         </div>
       </div>
 
